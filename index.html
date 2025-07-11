@@ -24,6 +24,7 @@
         }
     </style>
     <script>
+        // Request location permission and show the city-specific page
         function getLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(showCityContent, showError);
@@ -32,15 +33,16 @@
             }
         }
 
+        // Show content based on location
         function showCityContent(position) {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
 
-            // Use a reverse geocoding API (e.g., BigDataCloud) to get city information based on coordinates
+            // Use reverse geocoding to get city information
             fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`)
                 .then(response => response.json())
                 .then(data => {
-                    const city = data.city || 'Unknown City'; // Get city name
+                    const city = data.city || 'Unknown City'; // Get the city name
                     alert(`You're located in ${city}. Enjoy reading about your city!`);
                     showCityPage(city);  // Show city-specific content
                 })
@@ -50,14 +52,57 @@
                 });
         }
 
+        // Show the city page with city-specific information
         function showCityPage(city) {
             // Hide location prompt and show city content
             document.getElementById("location-prompt").style.display = "none";
             document.getElementById("content").style.display = "block";
             
-            // Set the content based on the city (you can customize this part)
+            // Display city name and basic content
             const cityInfo = document.getElementById("city-info");
             cityInfo.innerHTML = `
                 <h2>Welcome to ${city}!</h2>
                 <p>This is where you can find city-specific news, weather updates, and more.</p>
-                <p>
+                <p>Here's a brief about the city: [City Information]</p>
+                <p><a href="https://en.wikipedia.org/wiki/${city}" target="_blank">Learn more about ${city} on Wikipedia</a></p>
+            `;
+        }
+
+        // Handle geolocation errors
+        function showError(error) {
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    alert("You denied the request for Geolocation.");
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    alert("Location information is unavailable.");
+                    break;
+                case error.TIMEOUT:
+                    alert("The request to get user location timed out.");
+                    break;
+                case error.UNKNOWN_ERROR:
+                    alert("An unknown error occurred.");
+                    break;
+            }
+        }
+
+        // On page load, request the user's location
+        window.onload = function() {
+            getLocation(); // Call the function to get the user's location
+        };
+    </script>
+</head>
+<body>
+    <div id="location-prompt">
+        <h2>Location Required</h2>
+        <p>We need to know your location to show you content specific to your city. Please allow location access.</p>
+    </div>
+
+    <div id="content">
+        <h1>City-Specific Content</h1>
+        <div id="city-info">
+            <!-- City content will be populated here based on location -->
+        </div>
+    </div>
+</body>
+</html>
