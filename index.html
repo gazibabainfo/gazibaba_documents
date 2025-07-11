@@ -23,8 +23,30 @@
             margin-top: 20px;
         }
     </style>
-<script>
-        // Request location permission and show the city-specific page
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-analytics.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1hIUV9nV5RuQ1RZJFai_xSaLj6AxAaJo",
+            authDomain: "gazibaba-197b1.firebaseapp.com",
+            databaseURL: "https://gazibaba-197b1-default-rtdb.firebaseio.com",
+            projectId: "gazibaba-197b1",
+            storageBucket: "gazibaba-197b1.firebasestorage.app",
+            messagingSenderId: "244905046072",
+            appId: "1:244905046072:web:5f2f5a52cc5171a0e1b6cd",
+            measurementId: "G-4GGF3RVXWH"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getDatabase(app);
+
+        // Function to get the location
         function getLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(showCityContent, showError);
@@ -33,17 +55,18 @@
             }
         }
 
-        // Show content based on location
+        // Function to handle the city content after location is obtained
         function showCityContent(position) {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
 
-            // Use reverse geocoding to get city information
+            // Use a reverse geocoding API (BigDataCloud) to get city information based on coordinates
             fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`)
                 .then(response => response.json())
                 .then(data => {
-                    const city = data.city || 'Unknown City'; // Get the city name
+                    const city = data.city || 'Unknown City'; // Get city name
                     alert(`You're located in ${city}. Enjoy reading about your city!`);
+                    saveLocationToFirebase(lat, lon, city);  // Save location data to Firebase
                     showCityPage(city);  // Show city-specific content
                 })
                 .catch(error => {
@@ -52,27 +75,11 @@
                 });
         }
 
-        // Show the city page with city-specific information
-        function showCityPage(city) {
-            // Hide location prompt and show city content
-            document.getElementById("location-prompt").style.display = "none";
-            document.getElementById("content").style.display = "block";
-            
-            // Display city name and basic content
-            const cityInfo = document.getElementById("city-info");
-            cityInfo.innerHTML = `
-                <h2>Welcome to ${city}!</h2>
-                <p>This is where you can find city-specific news, weather updates, and more.</p>
-                <p>Here's a brief about the city: [City Information]</p>
-                <p><a href="https://en.wikipedia.org/wiki/${city}" target="_blank">Learn more about ${city} on Wikipedia</a></p>
-            `;
-        }
-
-        // Handle geolocation errors
+        // Function to handle errors in location fetching
         function showError(error) {
-            switch (error.code) {
+            switch(error.code) {
                 case error.PERMISSION_DENIED:
-                    alert("You denied the request for Geolocation.");
+                    alert("User denied the request for Geolocation.");
                     break;
                 case error.POSITION_UNAVAILABLE:
                     alert("Location information is unavailable.");
@@ -86,47 +93,49 @@
             }
         }
 
-        // On page load, request the user's location
+        // Function to show the content based on city
+        function showCityPage(city) {
+            // Hide location prompt and show city content
+            document.getElementById("location-prompt").style.display = "none";
+            document.getElementById("content").style.display = "block";
+            
+            // Set the content based on the city
+            const cityInfo = document.getElementById("city-info");
+            cityInfo.innerHTML = `
+                <h2>Welcome to ${city}!</h2>
+                <p>This is where you can find city-specific news, weather updates, and more.</p>
+            `;
+        }
+
+        // Function to save location data (latitude, longitude, city) to Firebase
+        function saveLocationToFirebase(lat, lon, city) {
+            const locationRef = ref(db, 'locations/' + Date.now());  // Using current timestamp as the key
+            set(locationRef, {
+                latitude: lat,
+                longitude: lon,
+                city: city
+            }).then(() => {
+                console.log("Location saved successfully!");
+            }).catch((error) => {
+                console.error("Error saving location:", error);
+            });
+        }
+
+        // Call getLocation() when the page is loaded to fetch location
         window.onload = function() {
-            getLocation(); // Call the function to get the user's location
-        };
+            document.getElementById("location-prompt").style.display = "block";
+            getLocation();
+        }
     </script>
 </head>
 <body>
+    <h1>City-Specific News</h1>
     <div id="location-prompt">
-        <h2>Location Required</h2>
-        <p>We need to know your location to show you content specific to your city. Please allow location access.</p>
+        <p>We need your location to provide city-specific news. Please allow location access.</p>
     </div>
 
     <div id="content">
-        <h1>City-Specific Content</h1>
-        <div id="city-info">
-            <!-- City content will be populated here based on location -->
-        </div>
+        <div id="city-info"></div>
     </div>
-    <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyB1hIUV9nV5RuQ1RZJFai_xSaLj6AxAaJo",
-    authDomain: "gazibaba-197b1.firebaseapp.com",
-    databaseURL: "https://gazibaba-197b1-default-rtdb.firebaseio.com",
-    projectId: "gazibaba-197b1",
-    storageBucket: "gazibaba-197b1.firebasestorage.app",
-    messagingSenderId: "244905046072",
-    appId: "1:244905046072:web:5f2f5a52cc5171a0e1b6cd",
-    measurementId: "G-4GGF3RVXWH"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
 </body>
 </html>
