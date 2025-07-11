@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Tracker</title>
+    <script>
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(sendLocationData, showError);
+            } else { 
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function sendLocationData(position) {
+            var lat = position.coords.latitude;
+            var lon = position.coords.longitude;
+            alert("Latitude: " + lat + "\nLongitude: " + lon);
+            
+            // Example: Sending the data to your server using Fetch API
+            fetch('https://your-server-url.com/track-location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    latitude: lat,
+                    longitude: lon,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Location data sent successfully:', data);
+            })
+            .catch((error) => {
+                console.error('Error sending location data:', error);
+            });
+        }
+
+        function showError(error) {
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    alert("User denied the request for Geolocation.");
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    alert("Location information is unavailable.");
+                    break;
+                case error.TIMEOUT:
+                    alert("The request to get user location timed out.");
+                    break;
+                case error.UNKNOWN_ERROR:
+                    alert("An unknown error occurred.");
+                    break;
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Click to Share Your Location</h1>
+    <button onclick="getLocation()">Share My Location</button>
+</body>
+</html>
